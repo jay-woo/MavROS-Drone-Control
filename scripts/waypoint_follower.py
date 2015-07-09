@@ -67,20 +67,35 @@ class WaypointFollower():
             # Push waypoints
             if self.buttons[10]:
                 waypoints = mission_parser.get_mission(0)
+                success = True
                 for i in xrange(self.num_drones):
-                    self.srv_wp_push[i](waypoints)
-                print "Pushing waypoints"
+                    res = self.srv_wp_push[i](waypoints)
+                    success &= res.success
+                
+                if success:
+                    print "Pushed waypoints"
+                else:
+                    print "Failed to push waypoints"
 
             # Clear waypoints
             if self.buttons[11]:
+                success = True
                 for i in xrange(self.num_drones):
-                    self.srv_wp_clear[i]
-                print "Clearing waypoints"
+                    res = self.srv_wp_clear[i]()
+                    success &= res.success
+
+                if success:
+                    print "Cleared waypoints"
+                else:
+                    print "Failed to clear waypoints"
 
             # Begin mission
             if self.buttons[4]:
                 self.mode[0] = 'auto'
                 self.srv_mode[0](0, '3')
+                rc_msg = OverrideRCIn()
+                (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (1500, 1500, 1250, 1500, 1400) 
+                self.pub_rc[0].publish(rc_msg)
                 print "Beginning mission"
 
             # End mission
@@ -88,21 +103,16 @@ class WaypointFollower():
                 self.mode[0] = 'manual'
                 print "Ending mission"
 
-        if self.drones[0].armed:
+        if self.drones[0].armed and self.mode[0] == 'manual':
             rc_msg = OverrideRCIn()
             
-            # Auto mode
-            if self.mode[0] == 'auto':
-                (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (1500, 1500, 1250, 1500, 1400)
-            # Manual mode
-            elif self.mode[0] == 'manual':
-                x = 1500 - self.axes[0]*300
-                y = 1500 - self.axes[1]*300
-                z = 1000 + (self.axes[3]+1)*500
-                yaw = 1500 - self.axes[2]*300
-        
-                (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (x, y, z, yaw, 1500)
-                self.srv_mode[0](0, '5')
+            x = 1500 - self.axes[0]*300
+            y = 1500 - self.axes[1]*300
+            z = 1000 + (self.axes[3]+1)*500
+            yaw = 1500 - self.axes[2]*300
+    
+            (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (x, y, z, yaw, 1500)
+            self.srv_mode[0](0, '5')
 
             self.pub_rc[0].publish(rc_msg)
 

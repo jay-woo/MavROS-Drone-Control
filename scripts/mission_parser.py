@@ -9,7 +9,6 @@ def get_mission(mission_num=0):
 
     for mission in tree.getroot():
         if int(mission.attrib['id']) == mission_num:
-            print mission.attrib['id']
             break
 
     waypoint_list = []
