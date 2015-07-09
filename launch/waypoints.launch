@@ -1,6 +1,5 @@
 <launch>
     <node pkg="mavros" type="mavros_node" name="drone0" required="true" clear_params="true" args="_fcu_url:=/dev/ttyUSB0:57600 _gcs_url:=''"></node>
-    <node pkg="mavros" type="mavros_node" name="drone1" required="true" clear_params="true" args="_fcu_url:=/dev/ttyUSB1:57600 _gcs_url:=''"></node>
 
     <node pkg="drone_control" type="waypoint_follower.py" name="waypoint_follower" required="true" output="screen"></node>
 

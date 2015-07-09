@@ -7,7 +7,7 @@ roslib.load_manifest('mavros')
 from std_msgs.msg import Header
 from sensor_msgs.msg import Joy
 from mavros.msg import BatteryStatus, State, OverrideRCIn
-from mavros.srv import CommandBool, WaypointPush, WaypointClear
+from mavros.srv import CommandBool, WaypointPush, WaypointClear, SetMode
 
 from drone import *
 import mission_parser
@@ -21,7 +21,9 @@ class WaypointFollower():
         self.buttons = []
 
         # Drone variables
+        self.num_drones = num_drones
         self.drones = [Drone(i) for i in xrange(num_drones)]
+        self.mode = ['manual' for i in xrange(num_drones)]
 
         # ROS publishers
         self.pub_rc = [rospy.Publisher('/drone' + str(i) + '/rc/override', OverrideRCIn, queue_size=10) for i in xrange(num_drones)] 
@@ -29,12 +31,13 @@ class WaypointFollower():
         # ROS subscribers
         self.sub_joy = rospy.Subscriber('/joy', Joy, self.joy_callback)
 
-        self.sub_state = [rospy.Subscriber('/drone' + str(i) + '/state', State, self.drones[i].state_callback) for i in xrange(num_drones)]
+        self.sub_state =   [rospy.Subscriber('/drone' + str(i) + '/state',   State,         self.drones[i].state_callback) for i in xrange(num_drones)]
         self.sub_battery = [rospy.Subscriber('/drone' + str(i) + '/battery', BatteryStatus, self.drones[i].battery_callback) for i in xrange(num_drones)]
 
         # ROS services
-        self.srv_arm = [rospy.ServiceProxy('/drone' + str(i) + '/cmd/arming', CommandBool) for i in xrange(num_drones)]
-        self.srv_wp_push = [rospy.ServiceProxy('/drone' + str(i) + '/mission/push', WaypointPush) for i in xrange(num_drones)]
+        self.srv_arm =      [rospy.ServiceProxy('/drone' + str(i) + '/cmd/arming', CommandBool) for i in xrange(num_drones)]
+        self.srv_mode =     [rospy.ServiceProxy('/drone' + str(i) + '/set_mode', SetMode) for i in xrange(num_drones)]
+        self.srv_wp_push =  [rospy.ServiceProxy('/drone' + str(i) + '/mission/push', WaypointPush) for i in xrange(num_drones)]
         self.srv_wp_clear = [rospy.ServiceProxy('/drone' + str(i) + '/mission/clear', WaypointClear) for i in xrange(num_drones)]
        
         # Main loop
@@ -51,46 +54,61 @@ class WaypointFollower():
         if self.buttons:
             # Arm drone(s)
             if self.buttons[2]:
-                self.srv_arm0(True)
-                self.srv_arm1(True)
+                for i in xrange(self.num_drones):
+                    self.srv_arm[i](True)
                 print "Arming drones"
+
             # Disarm drone(s)
             if self.buttons[3]:
-                self.srv_arm0(False)
-                self.srv_arm1(False)
+                for i in xrange(self.num_drones):
+                    self.srv_arm[i](False)
                 print "Disarming drones"
 
-        if self.drones[0].armed or self.drones[1].armed:
-            x = 1500 - self.axes[0]*300
-            y = 1500 - self.axes[1]*300
-            z = 1000 + (self.axes[3]+1)*500
-            yaw = 1500 - self.axes[2]*300
-    
+            # Push waypoints
+            if self.buttons[10]:
+                waypoints = mission_parser.get_mission(0)
+                for i in xrange(self.num_drones):
+                    self.srv_wp_push[i](waypoints)
+                print "Pushing waypoints"
+
+            # Clear waypoints
+            if self.buttons[11]:
+                for i in xrange(self.num_drones):
+                    self.srv_wp_clear[i]
+                print "Clearing waypoints"
+
+            # Begin mission
+            if self.buttons[4]:
+                self.mode[0] = 'auto'
+                self.srv_mode[0](0, '3')
+                print "Beginning mission"
+
+            # End mission
+            if self.buttons[5]:
+                self.mode[0] = 'manual'
+                print "Ending mission"
+
+        if self.drones[0].armed:
             rc_msg = OverrideRCIn()
-            (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3]) = (x, y, z, yaw)
-    
-            if self.drones[0].armed:
-                self.pub_rc0.publish(rc_msg)
-            if self.drones[1].armed:
-                self.pub_rc1.publish(rc_msg)
+            
+            # Auto mode
+            if self.mode[0] == 'auto':
+                (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (1500, 1500, 1250, 1500, 1400)
+            # Manual mode
+            elif self.mode[0] == 'manual':
+                x = 1500 - self.axes[0]*300
+                y = 1500 - self.axes[1]*300
+                z = 1000 + (self.axes[3]+1)*500
+                yaw = 1500 - self.axes[2]*300
+        
+                (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (x, y, z, yaw, 1500)
+                self.srv_mode[0](0, '5')
 
-    def start_mission0(self):
-        waypoints = mission_parser.get_mission()
-        print self.srv_wp_push0(waypoints)
-
-    def start_mission1(self):
-        waypoints = mission_parser.get_mission()
-        self.srv_wp_push1(waypoints)
-
-    def end_mission0(self):
-        self.srv_wp_clear0()
-
-    def end_mission1(self):
-        self.srv_wp_clear1()
+            self.pub_rc[0].publish(rc_msg)
 
 if __name__ == '__main__':
     try:
-        var = WaypointFollower(2)
+        var = WaypointFollower(1)
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

@@ -8,7 +8,8 @@ def get_mission(mission_num=0):
     tree = ET.parse(package_path + '/scripts/missions.xml')
 
     for mission in tree.getroot():
-        if str(mission.attrib['id']) == mission_num: 
+        if int(mission.attrib['id']) == mission_num:
+            print mission.attrib['id']
             break
 
     waypoint_list = []

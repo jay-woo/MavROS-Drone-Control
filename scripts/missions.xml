@@ -33,7 +33,7 @@
         
         <waypoint num="1">
             <frame>3</frame>
-            <is_current>True</is_current>
+            <is_current>False</is_current>
             <autocontinue>True</autocontinue>
             <command>16</command>
 
@@ -48,8 +48,25 @@
 
         <waypoint num="2">
             <frame>3</frame>
+            <is_current>False</is_current>
+            <autocontinue>False</autocontinue>
+            <command>21</command>
+
+            <param1>0</param1>
+            <param2>0</param2>
+            <param3>0</param3>
+            <param4>0</param4>
+            <latitude>42.293394</latitude>
+            <longitude>-71.263916</longitude>
+            <altitude>0</altitude>
+        </waypoint>
+    </mission>
+
+    <mission id="1">
+        <waypoint num="0">
+            <frame>3</frame>
             <is_current>True</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>21</command>
 
             <param1>0</param1>
