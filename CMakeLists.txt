@@ -9,7 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
   rospy
-  rospkg
   std_msgs
 )
 
