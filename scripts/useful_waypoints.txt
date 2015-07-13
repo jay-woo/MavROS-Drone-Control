@@ -1,0 +1,12 @@
+Useful waypoints for testing misison code:
+note: 1E-5 degrees is approximately 1.1m of latitude (N/S) and 0.9m of longitude (E/W) (here)
+_________________________________
+|             |             |
+|     lat     |     lon     | comments
+|-------------|-------------|----
+|  42.2933836 | -71.2638339 | oval - center of milas hall quadrant
+|-------------|-------------|----
+|  42.291810  | -71.262272  | fields - top of goalie box closest to Olin
+|-------------|-------------|----
+|  42.291534  | -71.262074  | fields - center of near field
+|-------------|-------------|----
