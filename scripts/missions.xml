@@ -17,13 +17,13 @@
 <missions>
     <mission id="0">
         <waypoint num="0">
-            <frame>1</frame>
+            <frame>3</frame>
             <is_current>True</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>16</command>
 
             <param1>0</param1>
-            <param2>0</param2>
+            <param2>1</param2>
             <param3>0</param3>
             <param4>0</param4>
             <latitude>0</latitude>
@@ -34,11 +34,11 @@
         <waypoint num="1">
             <frame>3</frame>
             <is_current>False</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>22</command>
 
             <param1>0</param1>
-            <param2>0</param2>
+            <param2>1</param2>
             <param3>0</param3>
             <param4>0</param4>
             <latitude>0</latitude>
@@ -49,11 +49,11 @@
         <waypoint num="2">
             <frame>3</frame>
             <is_current>False</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>16</command>
 
             <param1>5</param1>
-            <param2>0</param2>
+            <param2>2</param2>
             <param3>0</param3>
             <param4>0</param4>
             <latitude>42.2933519</latitude>
@@ -64,11 +64,11 @@
         <waypoint num="3">
             <frame>3</frame>
             <is_current>False</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>16</command>
 
             <param1>5</param1>
-            <param2>0</param2>
+            <param2>2</param2>
             <param3>0</param3>
             <param4>0</param4>
             <latitude>42.2933836</latitude>
@@ -79,7 +79,7 @@
         <waypoint num="4">
             <frame>3</frame>
             <is_current>False</is_current>
-            <autocontinue>True</autocontinue>
+            <autocontinue>False</autocontinue>
             <command>21</command>
 
             <param1>0</param1>
@@ -91,6 +91,7 @@
             <altitude>0</altitude>
         </waypoint>
     </mission>
+
 
     <mission id="1">
         <waypoint num="0">

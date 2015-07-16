@@ -31,3 +31,22 @@ def get_mission(mission_num=0):
         waypoint_list.append(waypoint)
 
     return waypoint_list
+
+def make_global_waypoint(lat, lon):
+    rospack = rospkg.RosPack()
+    package_path = rospack.get_path('drone_control')
+    waypoint = Waypoint()
+
+    waypoint.frame = 3
+    waypoint.command = 16
+    waypoint.is_current = 0
+    waypoint.autocontinue = 1
+    waypoint.param1 = 5 #hold time
+    waypoint.param2 = 2
+    waypoint.param3 = 0
+    waypoint.param4 = 0
+    waypoint.x_lat = lat
+    waypoint.y_long = lon
+    waypoint.z_alt = 5
+
+    return waypoint

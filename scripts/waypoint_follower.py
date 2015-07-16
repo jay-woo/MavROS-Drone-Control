@@ -7,7 +7,7 @@ roslib.load_manifest('mavros')
 from std_msgs.msg import Header
 from sensor_msgs.msg import Joy
 from mavros.msg import BatteryStatus, State, OverrideRCIn
-from mavros.srv import CommandBool, WaypointPush, WaypointClear, SetMode
+from mavros.srv import CommandBool, WaypointPush, WaypointClear, WaypointGOTO, SetMode
 
 from drone import *
 import mission_parser
@@ -24,6 +24,7 @@ class WaypointFollower():
         self.num_drones = num_drones
         self.drones = [Drone(i) for i in xrange(num_drones)]
         self.mode = ['manual' for i in xrange(num_drones)]
+        self.waypoints = []
 
         # ROS publishers
         self.pub_rc = [rospy.Publisher('/drone' + str(i) + '/rc/override', OverrideRCIn, queue_size=10) for i in xrange(num_drones)] 
@@ -39,6 +40,7 @@ class WaypointFollower():
         self.srv_mode =     [rospy.ServiceProxy('/drone' + str(i) + '/set_mode', SetMode) for i in xrange(num_drones)]
         self.srv_wp_push =  [rospy.ServiceProxy('/drone' + str(i) + '/mission/push', WaypointPush) for i in xrange(num_drones)]
         self.srv_wp_clear = [rospy.ServiceProxy('/drone' + str(i) + '/mission/clear', WaypointClear) for i in xrange(num_drones)]
+        self.srv_wp_goto = [rospy.ServiceProxy('/drone' + str(i) + '/mission/goto', WaypointGOTO) for i in xrange(num_drones)]
        
         # Main loop
         r = rospy.Rate(10)
@@ -66,10 +68,10 @@ class WaypointFollower():
 
             # Push waypoints
             if self.buttons[10]:
-                waypoints = mission_parser.get_mission(0)
+                self.waypoints = mission_parser.get_mission(0)
                 success = True
                 for i in xrange(self.num_drones):
-                    res = self.srv_wp_push[i](waypoints)
+                    res = self.srv_wp_push[i](self.waypoints)
                     success &= res.success
                 
                 if success:
@@ -85,9 +87,37 @@ class WaypointFollower():
                     success &= res.success
 
                 if success:
+                    self.waypoints = []
                     print "Cleared waypoints"
                 else:
                     print "Failed to clear waypoints"
+
+            #goto waypoint
+            if self.buttons[9]:
+                waypoint = mission_parser.make_global_waypoint(42.2933836, -71.2638339)
+                success = True
+                for i in xrange(self.num_drones):
+                    res = self.srv_wp_goto[i](waypoint)
+                    success &= res.success
+                if success:
+                    print "Pushed goto waypoint"
+                else:
+                    print "Failed goto waypoint"
+
+            #add waypooint
+            if self.buttons[8]:
+                waypoint = mission_parser.make_global_waypoint(42.2933836, -71.2638339)
+                self.waypoints.append(waypoint)
+                success = True
+                for i in xrange(self.num_drones):
+                    res = self.srv_wp_push[i](self.waypoints)
+                    success &= res.success
+                
+                if success:
+                    print "Added waypoint"
+                else:
+                    print "Failed to add waypoint"
+
 
             # Begin mission
             if self.buttons[4]:
@@ -109,7 +139,7 @@ class WaypointFollower():
             x = 1500 - self.axes[0]*300
             y = 1500 - self.axes[1]*300
             z = 1000 + (self.axes[3]+1)*500
-            yaw = 1500 - self.axes[2]*300
+            yaw = 1500 - self.axes[2]*200
     
             (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (x, y, z, yaw, 1500)
             self.srv_mode[0](0, '5')
