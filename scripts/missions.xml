@@ -15,6 +15,38 @@
 -->
 
 <missions>
+    <mission id="takeoff">
+        <waypoint num="0">
+           <frame>3</frame>
+            <is_current>True</is_current>
+            <autocontinue>False</autocontinue>
+            <command>16</command>
+
+            <param1>5.0</param1>
+            <param2>1</param2>
+            <param3>0</param3>
+            <param4>0</param4>
+            <latitude>0</latitude>
+            <longitude>0</longitude>
+            <altitude>5.0</altitude>
+        </waypoint>
+
+        <waypoint num="1">
+            <frame>3</frame>
+            <is_current>False</is_current>
+            <autocontinue>False</autocontinue>
+            <command>22</command>
+
+            <param1>0</param1>
+            <param2>1</param2>
+            <param3>0</param3>
+            <param4>0</param4>
+            <latitude>0</latitude>
+            <longitude>0</longitude>
+            <altitude>5.0</altitude>
+        </waypoint>
+    </mission>
+            
     <mission id="0">
         <waypoint num="0">
             <frame>3</frame>

@@ -8,7 +8,7 @@ def get_mission(mission_num=0):
     tree = ET.parse(package_path + '/scripts/missions.xml')
 
     for mission in tree.getroot():
-        if int(mission.attrib['id']) == mission_num:
+        if mission.attrib['id'] == mission_num:
             break
 
     waypoint_list = []
@@ -33,8 +33,6 @@ def get_mission(mission_num=0):
     return waypoint_list
 
 def make_global_waypoint(lat, lon):
-    rospack = rospkg.RosPack()
-    package_path = rospack.get_path('drone_control')
     waypoint = Waypoint()
 
     waypoint.frame = 3
@@ -50,3 +48,11 @@ def make_global_waypoint(lat, lon):
     waypoint.z_alt = 5
 
     return waypoint
+
+# Returns set of waypoints that allows drone to takeoff from its current position
+def takeoff_waypoints(alt=5.0):
+    waypoint_list = get_mission('takeoff')
+    waypoint_list[0].z_alt = alt
+    waypoint_list[1].z_alt = alt
+
+    return waypoint_list

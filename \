@@ -44,6 +44,7 @@ class FiducialFollower():
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
             self.fly()
+            print self.fiducial
             r.sleep()
 
     def joy_callback(self, data):
@@ -57,9 +58,7 @@ class FiducialFollower():
         if self.buttons:
             # Arm drone
             if self.buttons[2]:
-                loiter = self.srv_mode(0, '5') # Attempts to set to loiter mode
-                if not loiter:                 # Tries alt hold, if that fails
-                    self.srv_mode(0, '2')
+                self.srv_mode(0, '5')
                 self.srv_arm(True)
                 print "Arming drone"
 
@@ -86,17 +85,12 @@ class FiducialFollower():
                 yaw = 1500 - self.axes[2] * 200
 
             if self.mode == 'auto':
-                scale_x = self.fiducial[0] 
-                scale_y = self.fiducial[1]
- 
-                x = 1500 - scale_x * 50
-                y = 1500 - scale_y * 50
+                (x, y) = (self.fiducial[0], self.fiducial[1])
                 z = 1500
                 yaw = 1500
 
-            (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[6]) = (x, y, z, yaw, 1250)
+            (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4], rc_msg.channels[6]) = (x, y, z, yaw, 1500, 1250)
             self.pub_rc.publish(rc_msg)
-            self.srv_mode(0, '2') # Altitude hold mode
 
 if __name__ == '__main__':
     try:
