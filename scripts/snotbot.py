@@ -30,7 +30,7 @@ class Snotbot():
         self.drone = Drone(0)  # Drone class contains valuable functions/variables
 
         # Vision variables
-        self.fiducial = [-1, -1, -1]
+        self.fiducial = (0, 0, 0) 
 
         # Miscellaneous variables
         self.time_mode_started = 0    # Records when each mode in the finite state machine started

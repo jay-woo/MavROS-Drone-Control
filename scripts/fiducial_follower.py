@@ -21,10 +21,9 @@ class FiducialFollower():
 
         # Drone variables
         self.drone = Drone(0)
-        self.mode = 'manual'
 
         # Vision variables
-        self.fiducial = (-1, -1, -1)
+        self.fiducial = (0, 0, 0)
 
         # ROS publishers
         self.pub_rc = rospy.Publisher('/drone/rc/override', OverrideRCIn, queue_size=10)
@@ -57,9 +56,7 @@ class FiducialFollower():
         if self.buttons:
             # Arm drone
             if self.buttons[2]:
-                loiter = self.srv_mode(0, '5') # Attempts to set to loiter mode
-                if not loiter:                 # Tries alt hold, if that fails
-                    self.srv_mode(0, '2')
+                self.srv_mode(0, '5')
                 self.srv_arm(True)
                 print "Arming drone"
 
@@ -68,35 +65,30 @@ class FiducialFollower():
                 self.srv_arm(False)
                 print "Disarming drone"
 
-            # Track fiducial (drone must be in the air first!)
-            if self.buttons[4]:
-                self.mode = 'auto'
-
-            # Stop tracking fiducial
-            if self.buttons[5]:
-                self.mode = 'manual'
-
         if self.drone.armed:
             rc_msg = OverrideRCIn()
 
-            if self.mode == 'manual':
+            if abs(self.axes[0]) > 0.00001 or abs(self.axes[1]) > 0.00001:
                 x = 1500 - self.axes[0] * 300
                 y = 1500 - self.axes[1] * 300
-                z = 1000 + (self.axes[3]+1) * 500
                 yaw = 1500 - self.axes[2] * 200
-
-            if self.mode == 'auto':
+            else:
                 scale_x = self.fiducial[0] 
                 scale_y = self.fiducial[1]
  
-                x = 1500 - scale_x * 50
+                x = 1500 + scale_x * 50
                 y = 1500 - scale_y * 50
-                z = 1500
                 yaw = 1500
+
+            if self.axes[3] > 0.8:
+                z = 1600
+            elif self.axes[3] < -0.8:
+                z = 1400
+            else:
+                z = 1500
 
             (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[6]) = (x, y, z, yaw, 1250)
             self.pub_rc.publish(rc_msg)
-            self.srv_mode(0, '2') # Altitude hold mode
 
 if __name__ == '__main__':
     try:
