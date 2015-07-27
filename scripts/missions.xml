@@ -76,6 +76,7 @@
             <altitude>3.0</altitude>
         </waypoint>
 
+<!--
         <waypoint num="4">
             <frame>3</frame>
             <is_current>False</is_current>
@@ -90,23 +91,56 @@
             <longitude>0</longitude>
             <altitude>0</altitude>
         </waypoint>
+-->
     </mission>
 
 
     <mission id="1">
-        <waypoint num="0">
+
+        <waypoint num="4">
             <frame>3</frame>
-            <is_current>True</is_current>
+            <is_current>False</is_current>
             <autocontinue>False</autocontinue>
-            <command>21</command>
+            <command>16</command>
 
             <param1>0</param1>
             <param2>0</param2>
             <param3>0</param3>
             <param4>0</param4>
-            <latitude>42.293394</latitude>
-            <longitude>-71.263916</longitude>
+            <latitude>42.293429</latitude>
+            <longitude>-71.263976</longitude>
             <altitude>0</altitude>
         </waypoint>
+
+        <waypoint num="5">
+            <frame>3</frame>
+            <is_current>False</is_current>
+            <autocontinue>False</autocontinue>
+            <command>16</command>
+
+            <param1>0</param1>
+            <param2>0</param2>
+            <param3>0</param3>
+            <param4>0</param4>
+            <latitude>42.293357</latitude>
+            <longitude>-71.263997</longitude>
+            <altitude>0</altitude>
+        </waypoint>
+<!---
+        <waypoint num="6">
+            <frame>3</frame>
+            <is_current>False</is_current>
+            <autocontinue>False</autocontinue>
+            <command>16</command>
+
+            <param1>5</param1>
+            <param2>2</param2>
+            <param3>0</param3>
+            <param4>0</param4>
+            <latitude>42.2933836</latitude>
+            <longitude>-71.2638339</longitude>
+            <altitude>3.0</altitude>
+        </waypoint>
+-->
     </mission>
 </missions>

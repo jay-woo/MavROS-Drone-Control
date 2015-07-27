@@ -40,7 +40,7 @@ def make_global_waypoint(lat, lon):
     waypoint.frame = 3
     waypoint.command = 16
     waypoint.is_current = 0
-    waypoint.autocontinue = 1
+    waypoint.autocontinue = False
     waypoint.param1 = 5 #hold time
     waypoint.param2 = 2
     waypoint.param3 = 0
