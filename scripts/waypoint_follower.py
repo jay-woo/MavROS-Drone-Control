@@ -224,7 +224,12 @@ class WaypointFollower():
             z = 1000 + (self.axes[3]+1)*500
             yaw = 1500 - self.axes[2]*200
     
+<<<<<<< HEAD
             (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3], rc_msg.channels[4]) = (x, y, z, yaw, 1500)
+=======
+            (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3]) = (x, y, z, yaw)
+            self.srv_mode[0](0, '2')
+>>>>>>> abd9b4aa3bab425a9910dd691417a2939cccc86e
 
             self.pub_rc[0].publish(rc_msg)
 

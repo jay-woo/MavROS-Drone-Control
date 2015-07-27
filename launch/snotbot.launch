@@ -1,0 +1,12 @@
+<launch>
+    <node pkg="mavros" type="mavros_node" name="drone" required="true" clear_params="true" args="_fcu_url:=/dev/ttyUSB0:57600 _gcs_url:='udp://localhost:14555@localhost:14550:/'"></node>
+
+    <node pkg="drone_control" type="snotbot.py" name="snotbot" required="true" output="screen"></node>
+
+    <node pkg="drone_control" type="vision.py" name="vision" required="true" output="screen"></node>
+
+    <node pkg="joy" type="joy_node" name="joy" required="true">
+        <param name="autorepeat_rate" value="5" />
+        <param name="dev" value="/dev/input/js0" />
+    </node>
+</launch>
