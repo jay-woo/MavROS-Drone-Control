@@ -4,8 +4,9 @@ import roslib
 import time
 import rospkg
 roslib.load_manifest('mavros')
-
 import os
+import xml.etree.cElementTree as ET
+
 from std_msgs.msg import Header
 from sensor_msgs.msg import Joy
 from mavros.msg import BatteryStatus, State, OverrideRCIn, Waypoint
@@ -77,7 +78,7 @@ class WaypointFollower():
         print "guided points reset"
 
     def set_mission_to_map(self):
-        self.waypoints = [self.make_global_waypoint(point[0], point[1]) for point in self.google_waypoints]
+        self.waypoints = [self.make_global_waypoint(lat, lon) for [lat, lon] in self.google_waypoints]
         self.start_with_takeoff()
         self.end_with_rtl()
         self.push_waypoints()
@@ -115,10 +116,12 @@ class WaypointFollower():
         self.waypoints.append(rtl)
 
     def start_with_takeoff(self):
+        start = self.make_global_waypoint(0, 0)
         takeoff = Waypoint()
         takeoff.command = 22
         takeoff.z_alt = DEFAULT_ALT
         self.waypoints.insert(0, takeoff)
+        self.waypoints.insert(0, start)
 
     def make_global_waypoint(self, lat, lon, alt=DEFAULT_ALT, hold=5):
         rospack = rospkg.RosPack()
@@ -138,6 +141,27 @@ class WaypointFollower():
         waypoint.z_alt = alt
 
         return waypoint
+
+    def save_mission_to_file(self):
+        root = ET.Element('missions')
+        mission = ET.SubElement(root, 'mission', id='0')
+        for (i, point) in enumerate(self.waypoints):
+            waypoint = ET.SubElement(mission, 'waypoint', num=str(i))
+            frame = ET.SubElement(waypoint, 'frame').text = str(point.frame)
+            is_current = ET.SubElement(waypoint, 'is_current').text = str(point.is_current)
+            autocontinue = ET.SubElement(waypoint, 'autocontinue').text = str(point.autocontinue)
+            command = ET.SubElement(waypoint, 'command').text = str(point.command)
+            param1 = ET.SubElement(waypoint, 'param1').text = str(point.param1)
+            param2 = ET.SubElement(waypoint, 'param2').text = str(point.param2)
+            param3 = ET.SubElement(waypoint, 'param3').text = str(point.param3)
+            param4 = ET.SubElement(waypoint, 'param4').text = str(point.param4)
+            lat = ET.SubElement(waypoint, 'latitude').text = str(point.x_lat)
+            lon = ET.SubElement(waypoint, 'longitude').text = str(point.y_long)
+            alt = ET.SubElement(waypoint, 'altitude').text = str(point.z_alt)
+        tree = ET.ElementTree(root)
+        package_path = rospkg.RosPack().get_path('drone_control')
+        tree.write(package_path + '/scripts/last_mission.xml')
+        print 'missoin saved: copy last_mission.xml to new file to keep'
 
     def restart_mission(self):
         success = True
@@ -249,14 +273,17 @@ class WaypointFollower():
                 self.push_waypoints()
                 self.restart_mission()
             '''
-
             #save map points to mission
             if self.buttons[9]:
                 self.set_mission_to_map()
 
+            '''
             #add waypoints
             if self.buttons[8]:
                 self.add_waypoints([[42.293394, -71.263916],[42.293357, -71.263997]])
+            '''
+            if self.buttons[8]:
+                self.save_mission_to_file()
 
             #enter guided mode/toggle guided waypoints
             if self.buttons[1]:
@@ -287,6 +314,7 @@ class WaypointFollower():
             yaw = 1500 - self.axes[2]*200
             
             (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3]) = (x, y, z, yaw)
+            print z
 
             self.pub_rc[0].publish(rc_msg)
 

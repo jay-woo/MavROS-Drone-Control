@@ -1,0 +1,30 @@
+<missions>
+	<mission id="0">
+		<waypoint num="0">
+			<frame>3</frame>
+			<is_current>True</is_current>
+			<autocontinue>True</autocontinue>
+			<command>16</command>
+			<param1>0.0</param1>
+			<param2>0.0</param2>
+			<param3>0.0</param3>
+			<param4>0.0</param4>
+			<latitude>42.293429</latitude>
+			<longitude>-71.263976</longitude>
+			<altitude>0.0</altitude>
+		</waypoint>
+		<waypoint num="1">
+			<frame>3</frame>
+			<is_current>True</is_current>
+			<autocontinue>True</autocontinue>
+			<command>16</command>
+			<param1>0.0</param1>
+			<param2>0.0</param2>
+			<param3>0.0</param3>
+			<param4>0.0</param4>
+			<latitude>42.293357</latitude>
+			<longitude>-71.263997</longitude>
+			<altitude>0.0</altitude>
+		</waypoint>
+	</mission>
+</missions>

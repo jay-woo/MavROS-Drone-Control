@@ -114,7 +114,7 @@ class MapManager(object):
 
 # initialize the map
 def start_map():
-    starting_coords = (42.293173, -71.263840)  # my apartment...
+    starting_coords = (42.293173, -71.263540)  # my apartment...
     manager = MapManager(MAP_HEIGHT, ZOOM, starting_coords[0], starting_coords[1])
 
     # BGR colors
