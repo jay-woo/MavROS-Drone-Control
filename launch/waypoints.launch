@@ -5,6 +5,6 @@
 
     <node pkg="joy" type="joy_node" name="joy" required="true">
         <param name="autorepeat_rate" value="5" />
-        <param name="dev" value="/dev/input/js0" />
+        <param name="dev" value="/dev/input/js1" />
     </node>
 </launch>
