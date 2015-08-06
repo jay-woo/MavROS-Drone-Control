@@ -6,13 +6,16 @@ import rospkg
 roslib.load_manifest('mavros')
 import os
 import xml.etree.cElementTree as ET
+import signal
 
 from std_msgs.msg import Header
-from sensor_msgs.msg import Joy
+from sensor_msgs.msg import Joy, NavSatFix
 from mavros.msg import BatteryStatus, State, OverrideRCIn, Waypoint
 from geometry_msgs.msg import Polygon
+from drone_control.msg import mission
 from mavros.srv import CommandBool, WaypointPush, WaypointClear, WaypointGOTO, SetMode, WaypointSetCurrent
 
+import InPoly
 from drone import *
 import mission_parser
 
@@ -20,6 +23,8 @@ DEFAULT_ALT = 10
 
 class WaypointFollower():
     def __init__(self, num_drones):
+        self.BOUNDEDFLIGHT = False
+
         rospy.init_node('waypoint_follower')
  
         # Joystick variables
@@ -40,10 +45,12 @@ class WaypointFollower():
 
         # ROS subscribers
         self.sub_joy = rospy.Subscriber('/joy', Joy, self.joy_callback)
-        self.sub_google_points = rospy.Subscriber('/google_waypoints', Polygon, self.google_points_callback)
+        #self.sub_google_points = rospy.Subscriber('/google_waypoints', Polygon, self.google_points_callback)
+        self.sub_map_points = rospy.Subscriber('/map_waypoints', mission, self.map_callback)
 
         self.sub_state =   [rospy.Subscriber('/drone' + str(i) + '/state',   State,         self.drones[i].state_callback) for i in xrange(num_drones)]
         self.sub_battery = [rospy.Subscriber('/drone' + str(i) + '/battery', BatteryStatus, self.drones[i].battery_callback) for i in xrange(num_drones)]
+        self.position = [rospy.Subscriber('/drone' + str(i) + '/gps/fix', NavSatFix, self.drones[i].gps_callback) for i in xrange(num_drones)]
 
         # ROS services
         self.srv_arm =      [rospy.ServiceProxy('/drone' + str(i) + '/cmd/arming', CommandBool) for i in xrange(num_drones)]
@@ -53,6 +60,12 @@ class WaypointFollower():
         self.srv_wp_goto = [rospy.ServiceProxy('/drone' + str(i) + '/mission/goto', WaypointGOTO) for i in xrange(num_drones)]
         self.srv_set_current = [rospy.ServiceProxy('/drone' + str(i) + '/mission/set_current', WaypointSetCurrent) for i in xrange(num_drones)]
        
+       #bounds for geo-fencing (only used if you set BOUNDEDFLIGHT to True without using map gui)
+        self.bounds = [[42.2936066125, -71.2640833648],
+                       [42.2934125759, -71.2638023141],
+                       [42.2933333772, -71.2640298313],
+                       [42.2934521752, -71.2641583117]]
+
         # Main loop
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
@@ -64,9 +77,19 @@ class WaypointFollower():
         self.axes = data.axes
         self.buttons = data.buttons
 
-    def google_points_callback(self, data):
-        self.google_waypoints = [[point.x, point.y] for point in data.points]
-
+    #def google_points_callback(self, data):
+        #self.google_waypoints = [[point.x, point.y] for point in data.points]
+    def map_callback(self, data):
+        self.google_waypoints = [[point.x, point.y, point.z] for point in data.waypoint.points]
+        self.do_takeoff_start = data.takeoff
+        self.do_rtl_end = data.rtl
+        self.do_hold_forever_end = data.hold_forever
+        if data.dest == 'mission':
+            self.set_mission_to_map()
+        if data.dest == 'guided':
+            self.set_guided_to_map()
+        if data.dest == 'bounds':
+            self.set_bounds_to_map()
 
     #functions for map gui
     def launch_map(self):
@@ -78,11 +101,20 @@ class WaypointFollower():
         print "guided points reset"
 
     def set_mission_to_map(self):
-        self.waypoints = [self.make_global_waypoint(lat, lon) for [lat, lon] in self.google_waypoints]
-        self.start_with_takeoff()
-        self.end_with_rtl()
+        self.waypoints = [self.make_global_waypoint(lat, lon, alt) for [lat, lon, alt] in self.google_waypoints]
+        if self.do_takeoff_start:
+            self.start_with_takeoff()
+        if self.do_rtl_end:
+            self.end_with_rtl()
+        if self.do_hold_forever_end:
+            self.continue_mission()
         self.push_waypoints()
 
+    def set_bounds_to_map(self):
+        #set the boundaries of a bounded flight (z is unused)
+        print 'setting bounds'
+        self.BOUNDEDFLIGHT = True
+        self.bounds = [[x, y] for [x, y, z] in self.google_waypoints]
 
     #guided mode functions
     def start_guided(self):
@@ -99,7 +131,6 @@ class WaypointFollower():
             print "set waypoint"
         else:
             print "waypoint failed"
-
 
     #mission functions
     def continue_mission(self):
@@ -177,7 +208,7 @@ class WaypointFollower():
                 self.RTL()
             else:
                 waypoint = self.guided_waypoints[self.guided_index]
-                self.set_guided_waypoint(waypoint[0], waypoint[1])
+                self.set_guided_waypoint(waypoint[0], waypoint[1], waypoint[2])
                 self.guided_index += 1
         else:
             self.start_guided()
@@ -211,10 +242,17 @@ class WaypointFollower():
             print "Failed to clear waypoints"
 
     def add_waypoints(self, coordinates):
+        '''adds waypoints to the end of the current mission'''
         new_waypoints = [self.make_global_waypoint(lat, lon) for [lat, lon] in coordinates]
         self.waypoints.extend(new_waypoints)
         #self.continue_mission() #don't land at end of mission
         self.push_waypoints()
+
+    def reset_waypoints(self, waypoints):
+        self.waypoints = waypoints
+        #self.continue_mission()
+        self.push_waypoints()
+        self.restart_mission()
 
     def begin_mission(self):
         self.mode[0] = 'auto'
@@ -301,7 +339,7 @@ class WaypointFollower():
             if self.buttons[7]:
                 self.launch_map()
 
-            time.sleep(0.01)
+            time.sleep(0.03)
 
 
         #joystick control for manual
@@ -314,9 +352,23 @@ class WaypointFollower():
             yaw = 1500 - self.axes[2]*200
             
             (rc_msg.channels[0], rc_msg.channels[1], rc_msg.channels[2], rc_msg.channels[3]) = (x, y, z, yaw)
-            print z
-
             self.pub_rc[0].publish(rc_msg)
+
+        if self.BOUNDEDFLIGHT and self.drones[0].armed and self.mode[0] != 'RTL':
+            pos = [self.drones[0].latitude, self.drones[0].longitude]
+            if pos != [0, 0]:
+                if not InPoly.isInPoly(self.bounds, pos):
+                    self.RTL()
+
+        def kill_handler(signum, frame):
+            rc_msg = OverrideRCIn()
+            killmessage = 65535
+            [killmessage for msg in rc_msg.channels]
+            self.pub_rc[0].publish(rc_msg)
+            print 'handing control back'
+            quit()
+        signal.signal(signal.SIGINT, kill_handler)
+
 
 if __name__ == '__main__':
     try:
