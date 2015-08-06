@@ -339,7 +339,7 @@ class WaypointFollower():
             if self.buttons[7]:
                 self.launch_map()
 
-            time.sleep(0.03)
+            time.sleep(0.01)
 
 
         #joystick control for manual

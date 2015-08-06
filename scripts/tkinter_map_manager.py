@@ -116,9 +116,14 @@ class MapManager(object): #created by the mapGUI class (below)
         lat, lon = self.x_y_to_lat_lon(x, y)
         self.plot_point(lat, lon)
         return lat, lon
+
     def rm_waypoint(self, event):
         #remove a waypoint
         self.plotted_points.pop(-1)
+        self.img = copy.copy(self.static_map)
+
+    def clear_waypoints(self):
+        self.plotted_points = []
         self.img = copy.copy(self.static_map)
 
     def plot_point(self, lat, lon):
@@ -240,6 +245,11 @@ class MapGui():
             index = self.current_waypoint-1
             self.map.plotted_points[index][2] = new_alt
 
+    def clear_points(self):
+        self.map.clear_waypoints()
+        self.current_waypoint = 0
+        self.waypoint_text.set('current waypoint: %d' %self.current_waypoint)
+
     def buttons(self):
         #setup the display below the map
         upper_bar = tk.Frame(self.root, height=100)
@@ -286,6 +296,9 @@ class MapGui():
 
         save_bound_button = tk.Button(self.root, text='Save as Boundary', command=self.save_bound)
         save_bound_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        clear_button = tk.Button(self.root, text='Clear', command=self.clear_points)
+        clear_button.pack(side=tk.LEFT, padx=5, pady=5)
 
     def loop(self):
         #main loop program
